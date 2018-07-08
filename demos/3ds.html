@@ -30,7 +30,7 @@
             'Material #51': $Painter.imgLoader('../resource/game_char/8.jpg'),
         };
 
-        window.Easycanvas.loader3ds('../resource/15sunflower/15sunflower.3DS', function (data) {
+        window.Easycanvas.loader3DS('../resource/15sunflower/15sunflower.3DS', function (data) {
             var ry = Easycanvas.transition.pendulum(0, 360, Math.random() * 5000 + 32000).loop();
 
             var flower = $Painter.add({

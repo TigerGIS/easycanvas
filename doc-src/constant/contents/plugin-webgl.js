@@ -73,9 +73,110 @@ module.exports = `
             </code>
         </section>
 
+        // fallback
+
         <h2>WebGL 3D</h2>
 
-        <p>当一个sprite类含有webgl属性时，(待补充）</p>
+        <p>如果要展示3D图形，可以向sprite类增加webgl参数。引入了WebGL插件之后，会向Easycanvas.webglShapes挂载一些基本的几何体。例如下例是一个旋转的立方体：</p>
+
+        <section>
+            <div class="code-2-demo bg-demo"></div>
+            <code>
+                <head>
+                    <script src="./lib/easycanvas/plugin.webgl.standalone.prod.js"></script>
+                </head>
+                <body>
+                    <canvas id="app"></canvas>
+                </body>
+
+                <script>
+                    var $app = new Easycanvas.painter({
+                        el: '#app',
+                        width: 400,
+                        height: 400,
+                        webgl: true, // 开启WebGL渲染
+                    });
+
+                    var $letterG = new Easycanvas.sprite({
+                        style: {
+                            tx: 100, ty: 200,
+                        },
+                        webgl:Easycanvas.webglShapes.block({
+                            a: 20, b: 40, c: 80,
+                            rx: Easycanvas.transition.linear(0, 360, 1000).loop(),
+                            ry: Easycanvas.transition.linear(0, 360, 2000).loop(),
+                            rz: 45,
+                            colors: [
+                                255,255,0,
+                                255,0,0,
+                                0,255,0
+                            ],
+                        }),
+                    });
+
+                    $app.add($letterG);
+                    $app.start();
+                </script>
+            </code>
+        </section>
+
+        <p>这个例子中，向场景中添加了一个block形状，其中a、b、c是物体的长宽高，rx、ry、rz是x、y、z三个方向的旋转角度。这个例子的位置是用style里的tx和ty指定的。<strong>如果webgl里指定了tx、ty，那么将不再遵守style里的tx和ty参数。</strong>。</p>
+
+        <p>除了指定颜色，也可以为几何体指定一张贴图，例如下面是两个圆形的石头：</p>
+
+        <section>
+            <div class="code-2-demo bg-demo"></div>
+            <code>
+                <head>
+                    <script src="./lib/easycanvas/plugin.webgl.standalone.prod.js"></script>
+                </head>
+                <body>
+                    <canvas id="app"></canvas>
+                </body>
+
+                <script>
+                    var $app = new Easycanvas.painter({
+                        el: '#app',
+                        width: 400,
+                        height: 400,
+                        webgl: true, // 开启WebGL渲染
+                    });
+
+                    var stone = $app.imgLoader('https://raw.githubusercontent.com/chenzhuo1992/tanyitan/3d/debug/docs/stone.jpg');
+
+                    var $stone1 = new Easycanvas.sprite({
+                        style: {
+                            tx: 100, ty: 200,
+                        },
+                        webgl:Easycanvas.webglShapes.ball({
+                            r: 80, b: 40,
+                            rx: Easycanvas.transition.linear(0, 360, 1000).loop(),
+                            ry: Easycanvas.transition.linear(0, 360, 2000).loop(),
+                            rz: 45,
+                            img: stone
+                        }),
+                    });
+                    var $stone2 = new Easycanvas.sprite({
+                        style: {
+                            tx: 300, ty: 200,
+                        },
+                        webgl:Easycanvas.webglShapes.ball({
+                            r: 80, b: 10,
+                            rx: Easycanvas.transition.linear(0, 360, 1000).loop(),
+                            ry: Easycanvas.transition.linear(0, 360, 2000).loop(),
+                            rz: 45,
+                            img: stone
+                        }),
+                    });
+
+                    $app.add($stone1);
+                    $app.add($stone2);
+                    $app.start();
+                </script>
+            </code>
+        </section>
+
+        <p>可以看到，第一个球比第二个“更圆一些”。这是因为<strong>WebGL渲染时，是没有球体或者圆形的，只能用多个三角形来近似渲染</strong>。这里的b参数代表了三角形的密集程度，b越大，越趋近于圆形，但是也越消耗性能。</p>
 
     </article>
 `;

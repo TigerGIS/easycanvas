@@ -55,7 +55,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 0:
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(49);
+	module.exports = __webpack_require__(54);
 
 
 /***/ }),
@@ -143,7 +143,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 4:
+/***/ 5:
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -188,7 +188,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 20:
+/***/ 25:
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -1394,39 +1394,45 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 49:
+/***/ 54:
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _m = __webpack_require__(20);
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /** ********** *
+	                                                                                                                                                                                                                                                                   *
+	                                                                                                                                                                                                                                                                   * Support webgl rendering
+	                                                                                                                                                                                                                                                                   * - Usage: set {webgl: true} in config on registering your canvas instance.
+	                                                                                                                                                                                                                                                                   *
+	                                                                                                                                                                                                                                                                   * ********** **/
+
+	var _m = __webpack_require__(25);
 
 	var _m2 = _interopRequireDefault(_m);
 
-	var _webglShapes = __webpack_require__(50);
+	var _webglShapes = __webpack_require__(64);
 
 	var _webglShapes2 = _interopRequireDefault(_webglShapes);
+
+	var _webglShaders = __webpack_require__(63);
+
+	var _webglShaders2 = _interopRequireDefault(_webglShaders);
 
 	var _utils = __webpack_require__(1);
 
 	var _utils2 = _interopRequireDefault(_utils);
 
-	var _math = __webpack_require__(52);
+	var _math = __webpack_require__(66);
 
 	var _math2 = _interopRequireDefault(_math);
 
-	var _img2base = __webpack_require__(4);
+	var _img2base = __webpack_require__(5);
 
 	var _img2base2 = _interopRequireDefault(_img2base);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var m4 = (0, _m2.default)(); /** ********** *
-	                              *
-	                              * Support webgl rendering
-	                              * - Usage: set {webgl: true} in config on registering your canvas instance.
-	                              *
-	                              * ********** **/
+	var m4 = (0, _m2.default)();
 
 	var inBrowser = typeof window !== 'undefined';
 
@@ -1434,19 +1440,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	    console.error('[Easycanvas-webgl] ' + msg);
 	};
 
-	var Shader_Vertex_Color = '\n    attribute vec4 a_position;\n    attribute vec4 a_color;\n    uniform float u_fudgeFactor; // \u900F\u5C04\n\n    uniform mat4 u_matrix;\n\n    varying vec4 v_color;\n\n    void main() {\n        // Multiply the position by the matrix.\n        // gl_Position = u_matrix * a_position;\n\n        // \u900F\u5C04\n        // \u8C03\u6574\u9664\u6570\n        vec4 position = u_matrix * a_position;\n        // \u7531\u4E8E\u88C1\u51CF\u7A7A\u95F4\u4E2D\u7684 Z \u503C\u662F -1 \u5230 +1 \u7684\uFF0C\u6240\u4EE5 +1 \u662F\u4E3A\u4E86\u8BA9 zToDivideBy \u53D8\u6210 0 \u5230 +2 * fudgeFactor\n        float zToDivideBy = 1.0 + position.z * u_fudgeFactor; // \u900F\u5C04\n        gl_Position = vec4(position.xy / zToDivideBy, position.zw);\n\n        v_color = a_color;\n    }\n';
-	var Shader_Vertex_Textcoord = '\n    attribute vec4 a_position;\n    attribute vec2 a_texcoord;\n    uniform float u_fudgeFactor; // \u900F\u5C04\n\n    uniform mat4 u_matrix;\n\n    varying vec2 v_texcoord;\n\n    void main() {\n        // Multiply the position by the matrix.\n        // gl_Position = u_matrix * a_position;\n\n        // \u900F\u5C04\n        // \u8C03\u6574\u9664\u6570\n        vec4 position = u_matrix * a_position;\n        // \u7531\u4E8E\u88C1\u51CF\u7A7A\u95F4\u4E2D\u7684 Z \u503C\u662F -1 \u5230 +1 \u7684\uFF0C\u6240\u4EE5 +1 \u662F\u4E3A\u4E86\u8BA9 zToDivideBy \u53D8\u6210 0 \u5230 +2 * fudgeFactor\n        float zToDivideBy = 1.0 + position.z * u_fudgeFactor; // \u900F\u5C04\n        gl_Position = vec4(position.xy / zToDivideBy, position.zw);\n\n        v_texcoord = a_texcoord;\n    }\n';
-
-	var Shader_Fragment_Textcoord = '\n    precision mediump float;\n\n    varying vec2 v_texcoord;\n\n    uniform sampler2D u_texture;\n\n    void main() {\n       gl_FragColor = texture2D(u_texture, v_texcoord);\n    }\n';
-	var Shader_Fragment_Color = '\n    precision mediump float;\n\n    varying vec4 v_color;\n\n    uniform sampler2D u_texture;\n\n    void main() {\n       gl_FragColor = v_color;\n    }\n';
-
 	var createShader = function () {
 	    var shaderCachePool = {};
 
-	    return function (gl, sourceCode, type) {
-	        if (shaderCachePool[sourceCode]) {
-	            return shaderCachePool[sourceCode];
+	    return function (gl, type, colorOrTex, light) {
+	        var cacheKey = '' + type + colorOrTex + light;
+
+	        if (shaderCachePool[cacheKey]) {
+	            return shaderCachePool[cacheKey];
 	        }
+
+	        var sourceCode = _webglShaders2.default.factory(gl, type)(colorOrTex, light);
 
 	        // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
 	        var shader = gl.createShader(type);
@@ -1458,7 +1462,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            throw 'Could not compile WebGL program. \n\n' + info;
 	        }
 
-	        shaderCachePool[sourceCode] = shader;
+	        shaderCachePool[cacheKey] = shader;
+
 	        return shader;
 	    };
 	}();
@@ -1484,19 +1489,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	var toggleShader = function () {
 	    var lastType;
 
-	    return function (gl, type) {
+	    return function (gl, type, light) {
 	        if (lastType === type) return;
 
 	        lastType = type;
 
 	        var shaderVertexColor, shaderFragmentColor;
-	        if (type === 0) {
-	            shaderVertexColor = createShader(gl, Shader_Vertex_Color, gl.VERTEX_SHADER);
-	            shaderFragmentColor = createShader(gl, Shader_Fragment_Color, gl.FRAGMENT_SHADER);
-	        } else {
-	            shaderVertexColor = createShader(gl, Shader_Vertex_Textcoord, gl.VERTEX_SHADER);
-	            shaderFragmentColor = createShader(gl, Shader_Fragment_Textcoord, gl.FRAGMENT_SHADER);
-	        }
+	        shaderVertexColor = createShader(gl, gl.VERTEX_SHADER, type, light);
+	        shaderFragmentColor = createShader(gl, gl.FRAGMENT_SHADER, type, light);
 
 	        gl.program = createProgram(gl, shaderVertexColor, shaderFragmentColor);
 
@@ -1504,11 +1504,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // look up where the vertex data needs to go.
 	        gl.positionLocation = gl.getAttribLocation(gl.program, 'a_position');
+	        gl.normalLocation = gl.getAttribLocation(gl.program, "a_normal");
 	        if (type === 0) {
 	            gl.colorLocation = gl.getAttribLocation(gl.program, 'a_color');
 	        } else {
 	            gl.texcoordLocation = gl.getAttribLocation(gl.program, 'a_texcoord');
 	        }
+
+	        // light
+	        // if (type === 0) {
+	        gl.worldViewProjectionLocation = gl.getUniformLocation(gl.program, "u_worldViewProjection");
+	        gl.worldInverseTransposeLocation = gl.getUniformLocation(gl.program, "u_worldInverseTranspose");
+	        gl.reverseLightDirectionLocation = gl.getUniformLocation(gl.program, "u_reverseLightDirection");
+	        // }
 
 	        // lookup uniforms
 	        gl.matrixLocation = gl.getUniformLocation(gl.program, 'u_matrix');
@@ -1519,6 +1527,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        gl.enableVertexAttribArray(gl.positionLocation);
+	        gl.enableVertexAttribArray(gl.normalLocation);
 	        gl.enableVertexAttribArray(gl.texcoordLocation);
 	        gl.enableVertexAttribArray(gl.colorLocation);
 	    };
@@ -1629,7 +1638,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var positionBuffer = webgl.vertices.$cacheBuffer,
 	        colorBuffer,
 	        texcoordBuffer,
-	        indicesBuffer;
+	        indicesBuffer,
+	        normalsBuffer;
 
 	    if (!positionBuffer) {
 	        positionBuffer = gl.createBuffer();
@@ -1672,12 +1682,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
+	    if (webgl.normals) {
+	        normalsBuffer = webgl.normals.$cacheBuffer;
+	        if (!normalsBuffer) {
+	            normalsBuffer = gl.createBuffer();
+	            gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+	            gl.bufferData(gl.ARRAY_BUFFER, webgl.normals, gl.STATIC_DRAW);
+	            webgl.normals.$cacheBuffer = normalsBuffer;
+	        }
+	    }
+
 	    // webglUtils.resizeCanvasToDisplaySize(gl.canvas);
 	    // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 	    // gl.enable(gl.CULL_FACE);
 
 	    if (colorBuffer) {
-	        toggleShader(gl, 0);
+	        toggleShader(gl, 0, $canvas.webgl.light !== false);
 	        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 	        var size = 3; // 3 components per iteration
 	        var type = gl.UNSIGNED_BYTE; // the data is 8bit unsigned values
@@ -1686,7 +1706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var offset = 0; // start at the beginning of the buffer
 	        gl.vertexAttribPointer(gl.colorLocation, size, type, normalize, stride, offset);
 	    } else if (texcoordBuffer) {
-	        toggleShader(gl, 1);
+	        toggleShader(gl, 1, $canvas.webgl.light !== false);
 	        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
 	        var size = 2; // 2 components per iteration
 	        var type = gl.FLOAT; // the data is 32bit floats
@@ -1704,6 +1724,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
 	        var offset = 0; // start at the beginning of the buffer
 	        gl.vertexAttribPointer(gl.positionLocation, size, type, normalize, stride, offset);
+	    }
+
+	    if (webgl.normals) {
+	        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+	        var size = 3; // 3 components per iteration
+	        var type = gl.FLOAT; // the data is 32bit floats
+	        var normalize = false; // don't normalize the data
+	        var stride = 0; // 0 = move forward size * sizeof(type) each iteration to get the next position
+	        var offset = 0; // start at the beginning of the buffer
+	        gl.vertexAttribPointer(gl.normalLocation, size, type, normalize, stride, offset);
 	    }
 
 	    if ($canvas.webgl.fudgeFactor) {
@@ -1750,8 +1780,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var projectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
 	    }
 
+	    // 光照变换
+	    gl.uniformMatrix4fv(gl.worldViewProjectionLocation, false, matrix);
+	    gl.uniformMatrix4fv(gl.worldInverseTransposeLocation, false, m4.transpose(projectionMatrix));
+
 	    // 耗性能
 	    gl.uniformMatrix4fv(gl.matrixLocation, false, projectionMatrix);
+
+	    var colorLocation = gl.getUniformLocation(gl.program, "a_color");
+	    gl.uniform4fv(colorLocation, window.a || [1, 1, 1, 1]); // green
+	    gl.uniform3fv(gl.reverseLightDirectionLocation, m4.normalize(window.b || [0, 1, 0]));
 
 	    // Tell the shader to use texture unit 0 for u_texture
 	    gl.uniform1i(gl.textureLocation, 0);
@@ -1847,11 +1885,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var webglRegister = function webglRegister($canvas, option) {
 	    $canvas.$isWebgl = true;
 
-	    $canvas.webgl = {
-	        depth: option.webgl.depth || 10000,
-	        fudgeFactor: option.webgl.fudgeFactor || 0,
-	        camera: option.webgl.camera
-	    };
+	    $canvas.webgl = {};
+	    _extends($canvas.webgl, option.webgl);
+	    $canvas.webgl.depth = $canvas.webgl.depth || 10000;
 
 	    var gl = $canvas.$gl = $canvas.$paintContext;
 
@@ -1927,6 +1963,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if ($sprite.webgl) {
 	        $sprite.$rendered = true;
 
+	        if (typeof $sprite.webgl.img === 'string') {
+	            $sprite.webgl.img = $canvas.imgLoader($sprite.webgl.img);
+	        }
+
 	        var _webgl = {
 	            tx: $sprite.getStyle('tx'),
 	            ty: $sprite.getStyle('ty'),
@@ -1982,8 +2022,37 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 50:
+/***/ 63:
 /***/ (function(module, exports) {
+
+	'use strict';
+
+	// @type: 0-color 1-textcoord
+	var shaderVertexFactory = function shaderVertexFactory(type, useLight) {
+	    var shaderString = '\n        attribute vec4 a_position;\n        ' + (type === 0 ? 'attribute vec4 a_color;' : 'attribute vec2 a_texcoord;') + '\n        ' + (useLight && '\n            attribute vec3 a_normal;\n            uniform mat4 u_worldViewProjection;\n            uniform mat4 u_worldInverseTranspose;\n        ' || '') + '\n        uniform float u_fudgeFactor; // \u900F\u5C04\n\n        uniform mat4 u_matrix;\n\n        ' + (type === 0 ? 'varying vec4 v_color;' : 'varying vec2 v_texcoord;') + '\n        ' + (useLight && '\n            varying vec3 v_normal;\n        ' || '') + '\n\n        void main() {\n            // Multiply the position by the matrix.\n            // gl_Position = u_matrix * a_position;\n\n            // \u900F\u5C04\n            // \u8C03\u6574\u9664\u6570\n            vec4 position = u_matrix * a_position;\n            // \u7531\u4E8E\u88C1\u51CF\u7A7A\u95F4\u4E2D\u7684 Z \u503C\u662F -1 \u5230 +1 \u7684\uFF0C\u6240\u4EE5 +1 \u662F\u4E3A\u4E86\u8BA9 zToDivideBy \u53D8\u6210 0 \u5230 +2 * fudgeFactor\n            float zToDivideBy = 1.0 + position.z * u_fudgeFactor; // \u900F\u5C04\n\n            ' + (useLight ? 'gl_Position = u_worldViewProjection * a_position;' : // 和投射冲突了 TODO
+	    'gl_Position = vec4(position.xy / zToDivideBy, position.zw);') + '\n\n            // gl_Position = u_worldViewProjection * vec4(position.xy / zToDivideBy, position.zw);\n\n            ' + (type === 0 ? 'v_color = a_color;' : 'v_texcoord = a_texcoord;') + '\n\n                ' + (useLight && '\n                    v_normal = mat3(u_worldInverseTranspose) * a_normal;\n                ' || '') + '\n        }\n    ';
+
+	    return shaderString;
+	};
+
+	var shaderFragmentFactory = function shaderFragmentFactory(type, useLight) {
+	    var shaderString = '\n        precision mediump float;\n\n        ' + (type === 0 ? 'varying vec4 v_color;' : 'varying vec2 v_texcoord;') + '\n\n        uniform sampler2D u_texture;\n\n        ' + (useLight && '\n            varying vec3 v_normal;\n            uniform vec3 u_reverseLightDirection;\n        ' || '') + '\n\n        void main() {\n            ' + (useLight && '\n                vec3 normal = normalize(v_normal);\n                float light = dot(normal, u_reverseLightDirection);\n            ' || '') + '\n\n            ' + (type === 0 ? 'gl_FragColor = v_color;' : 'gl_FragColor = texture2D(u_texture, v_texcoord);') + '\n\n            ' + (useLight && '\n                light += 2.0;\n                light *= 0.5;\n                gl_FragColor.rgb *= light;\n            ' || '') + '\n        }\n    ';
+
+	    return shaderString;
+	};
+
+	module.exports = {
+	    shaderVertexFactory: shaderVertexFactory,
+	    shaderFragmentFactory: shaderFragmentFactory,
+	    factory: function factory(gl, type) {
+	        return type === gl.FRAGMENT_SHADER ? shaderFragmentFactory : shaderVertexFactory;
+	    }
+	};
+
+/***/ }),
+
+/***/ 64:
+/***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
@@ -2187,6 +2256,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return structure;
 	};
 
+	var err = function err(msg) {
+	    console.error('[Easycanvas-webgl] ' + msg);
+	};
+
 	var webglShapes = {
 	    block: function block(opt) {
 	        var structure = createShapeWithCachedArray('block', [opt.a, opt.b, opt.c], opt.colors);
@@ -2204,16 +2277,51 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 
 	    custom: function custom(opt) {
-	        var res = _extends(opt, {
-	            vertices: new Float32Array(opt.vertices),
-	            indices: new Uint16Array(opt.indices),
-	            textures: new Float32Array(opt.textures)
-	        });
-
-	        if (opt.colors && opt.colors.length) {
-	            var colorRepeatTimes = (opt.indices || opt.vertices).length / opt.colors.length * (opt.indices ? 3 : 1);
-	            res.colors = new Uint8Array(arrayRepeat(opt.colors, colorRepeatTimes));
+	        if (true) {
+	            if (!opt.vertices) {
+	                err('No vertices provided on custom shape.');
+	                return;
+	            }
 	        }
+
+	        if (!opt.vertices.$cache) {
+	            // 确保复用Float32Array类型的vertices
+	            // 一个模型含有多个children时，使用相同的vertices的Buffer，提升效率
+	            opt.vertices.$cache = new Float32Array(opt.vertices);
+	        }
+
+	        if (opt.normals) {
+	            if (!opt.normals.$cache) {
+	                opt.normals.$cache = new Float32Array(opt.normals);
+	            }
+	        }
+
+	        if (opt.indices) {
+	            if (!opt.indices.$cache) {
+	                opt.indices.$cache = new Uint16Array(opt.indices);
+	            }
+	        }
+
+	        if (opt.textures) {
+	            if (!opt.textures.$cache) {
+	                opt.textures.$cache = new Float32Array(opt.textures);
+	            }
+	        }
+
+	        if (opt.colors) {
+	            if (!opt.colors.$cache) {
+	                var colorRepeatTimes = opt.vertices.length / opt.colors.length;
+	                opt.colors.$cache = new Uint8Array(arrayRepeat(opt.colors, colorRepeatTimes));
+	            }
+	        }
+
+	        var res = _extends(opt, {
+	            vertices: opt.vertices.$cache,
+	            normals: opt.normals ? opt.normals.$cache : undefined,
+	            indices: opt.indices ? opt.indices.$cache : undefined,
+	            textures: opt.textures ? opt.textures.$cache : undefined,
+	            colors: opt.colors ? opt.colors.$cache : undefined
+	        });
 
 	        return res;
 	    }
@@ -2240,7 +2348,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 52:
+/***/ 66:
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';

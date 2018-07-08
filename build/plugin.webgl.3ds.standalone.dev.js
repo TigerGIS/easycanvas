@@ -55,12 +55,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 0:
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(48);
+	module.exports = __webpack_require__(53);
 
 
 /***/ }),
 
-/***/ 48:
+/***/ 53:
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/** ********** *
 	 *
 	 * Based on lib3ds.js, transform *.3ds files to JSON structrue
-	 * - https://github.com/timknip/js3ds/blob/master/js/lib3ds.js.
+	 * - https://github.com/timknip/js3ds/blob/master/js/lib3ds.js
 	 *
 	 * ********** **/
 
@@ -1472,15 +1472,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	var inBrowser = typeof window !== 'undefined';
 
 	if (inBrowser && window.Easycanvas) {
-	    window.Easycanvas.loader3ds = loadFile;
+	    window.Easycanvas.loader3DS = loadFile;
 	} else {
 	    module.exports = plugin;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(56).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(70).Buffer))
 
 /***/ }),
 
-/***/ 55:
+/***/ 69:
 /***/ (function(module, exports) {
 
 	'use strict'
@@ -1603,7 +1603,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 56:
+/***/ 70:
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -1616,9 +1616,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict'
 
-	var base64 = __webpack_require__(55)
-	var ieee754 = __webpack_require__(58)
-	var isArray = __webpack_require__(57)
+	var base64 = __webpack_require__(69)
+	var ieee754 = __webpack_require__(72)
+	var isArray = __webpack_require__(71)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -3400,7 +3400,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 57:
+/***/ 71:
 /***/ (function(module, exports) {
 
 	var toString = {}.toString;
@@ -3412,7 +3412,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 
-/***/ 58:
+/***/ 72:
 /***/ (function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {

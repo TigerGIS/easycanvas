@@ -1,7 +1,7 @@
 /** ********** *
  *
  * Based on lib3ds.js, transform *.3ds files to JSON structrue
- * - https://github.com/timknip/js3ds/blob/master/js/lib3ds.js.
+ * - https://github.com/timknip/js3ds/blob/master/js/lib3ds.js
  *
  * ********** **/
 
@@ -1418,7 +1418,7 @@ function loadFile(url, callback) {
 const inBrowser = typeof window !== 'undefined';
 
 if (inBrowser && window.Easycanvas) {
-    window.Easycanvas.loader3ds = loadFile;
+    window.Easycanvas.loader3DS = loadFile;
 } else {
     module.exports = plugin;
 }

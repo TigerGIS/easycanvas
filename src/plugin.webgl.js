@@ -8,6 +8,7 @@
 import _webglM4 from 'lib/m4.js';
 
 import webglShapes from './plugins/webgl-shapes.js';
+import webglShaders from './plugins/webgl-shaders.js';
 
 import utils from 'utils/utils.js';
 import rectMeet from 'utils/math.rect-meet';
@@ -21,83 +22,17 @@ const err = function (msg) {
     console.error('[Easycanvas-webgl] ' + msg);
 };
 
-const Shader_Vertex_Color = `
-    attribute vec4 a_position;
-    attribute vec4 a_color;
-    uniform float u_fudgeFactor; // 透射
-
-    uniform mat4 u_matrix;
-
-    varying vec4 v_color;
-
-    void main() {
-        // Multiply the position by the matrix.
-        // gl_Position = u_matrix * a_position;
-
-        // 透射
-        // 调整除数
-        vec4 position = u_matrix * a_position;
-        // 由于裁减空间中的 Z 值是 -1 到 +1 的，所以 +1 是为了让 zToDivideBy 变成 0 到 +2 * fudgeFactor
-        float zToDivideBy = 1.0 + position.z * u_fudgeFactor; // 透射
-        gl_Position = vec4(position.xy / zToDivideBy, position.zw);
-
-        v_color = a_color;
-    }
-`;
-const Shader_Vertex_Textcoord = `
-    attribute vec4 a_position;
-    attribute vec2 a_texcoord;
-    uniform float u_fudgeFactor; // 透射
-
-    uniform mat4 u_matrix;
-
-    varying vec2 v_texcoord;
-
-    void main() {
-        // Multiply the position by the matrix.
-        // gl_Position = u_matrix * a_position;
-
-        // 透射
-        // 调整除数
-        vec4 position = u_matrix * a_position;
-        // 由于裁减空间中的 Z 值是 -1 到 +1 的，所以 +1 是为了让 zToDivideBy 变成 0 到 +2 * fudgeFactor
-        float zToDivideBy = 1.0 + position.z * u_fudgeFactor; // 透射
-        gl_Position = vec4(position.xy / zToDivideBy, position.zw);
-
-        v_texcoord = a_texcoord;
-    }
-`;
-
-const Shader_Fragment_Textcoord = `
-    precision mediump float;
-
-    varying vec2 v_texcoord;
-
-    uniform sampler2D u_texture;
-
-    void main() {
-       gl_FragColor = texture2D(u_texture, v_texcoord);
-    }
-`;
-const Shader_Fragment_Color = `
-    precision mediump float;
-
-    varying vec4 v_color;
-
-    uniform sampler2D u_texture;
-
-    void main() {
-       gl_FragColor = v_color;
-    }
-`;
-
 const createShader = (function () {
     var shaderCachePool = {};
 
-    return function (gl, sourceCode, type) {
-        if (shaderCachePool[sourceCode]) {
-            return shaderCachePool[sourceCode];
+    return function (gl, type, colorOrTex, light) {
+        let cacheKey = '' + type + colorOrTex + light;
+
+        if (shaderCachePool[cacheKey]) {
+            return shaderCachePool[cacheKey];
         }
+
+        let sourceCode = webglShaders.factory(gl, type)(colorOrTex, light);
 
         // Compiles either a shader of type gl.VERTEX_SHADER or gl.FRAGMENT_SHADER
         var shader = gl.createShader(type);
@@ -109,7 +44,8 @@ const createShader = (function () {
             throw 'Could not compile WebGL program. \n\n' + info;
         }
 
-        shaderCachePool[sourceCode] = shader;
+        shaderCachePool[cacheKey] = shader;
+
         return shader;
     }
 })();
@@ -135,19 +71,14 @@ const createProgram = function (gl, vertexShader, fragmentShader) {
 const toggleShader = (function () {
     var lastType;
 
-    return function (gl, type) {
+    return function (gl, type, light) {
         if (lastType === type) return;
 
         lastType = type;
 
         var shaderVertexColor, shaderFragmentColor;
-        if (type === 0) {
-            shaderVertexColor = createShader(gl, Shader_Vertex_Color, gl.VERTEX_SHADER);
-            shaderFragmentColor = createShader(gl, Shader_Fragment_Color, gl.FRAGMENT_SHADER);
-        } else {
-            shaderVertexColor = createShader(gl, Shader_Vertex_Textcoord, gl.VERTEX_SHADER);
-            shaderFragmentColor = createShader(gl, Shader_Fragment_Textcoord, gl.FRAGMENT_SHADER);
-        }
+        shaderVertexColor = createShader(gl, gl.VERTEX_SHADER, type, light);
+        shaderFragmentColor = createShader(gl, gl.FRAGMENT_SHADER, type, light);
 
         gl.program = createProgram(gl, shaderVertexColor, shaderFragmentColor);
 
@@ -155,11 +86,19 @@ const toggleShader = (function () {
 
         // look up where the vertex data needs to go.
         gl.positionLocation = gl.getAttribLocation(gl.program, 'a_position');
+        gl.normalLocation = gl.getAttribLocation(gl.program, "a_normal");
         if (type === 0) {
             gl.colorLocation = gl.getAttribLocation(gl.program, 'a_color');
         } else {
             gl.texcoordLocation = gl.getAttribLocation(gl.program, 'a_texcoord');
         }
+
+        // light
+        // if (type === 0) {
+            gl.worldViewProjectionLocation = gl.getUniformLocation(gl.program, "u_worldViewProjection");
+            gl.worldInverseTransposeLocation = gl.getUniformLocation(gl.program, "u_worldInverseTranspose");
+            gl.reverseLightDirectionLocation = gl.getUniformLocation(gl.program, "u_reverseLightDirection");
+        // }
 
         // lookup uniforms
         gl.matrixLocation = gl.getUniformLocation(gl.program, 'u_matrix');
@@ -170,6 +109,7 @@ const toggleShader = (function () {
         }
 
         gl.enableVertexAttribArray(gl.positionLocation);
+        gl.enableVertexAttribArray(gl.normalLocation);
         gl.enableVertexAttribArray(gl.texcoordLocation);
         gl.enableVertexAttribArray(gl.colorLocation);
     };
@@ -309,7 +249,7 @@ var webglRender3d = function ($canvas, webgl) {
     }
 
     var positionBuffer = webgl.vertices.$cacheBuffer,
-        colorBuffer, texcoordBuffer, indicesBuffer;
+        colorBuffer, texcoordBuffer, indicesBuffer, normalsBuffer;
 
     if (!positionBuffer) {
         positionBuffer = gl.createBuffer();
@@ -353,12 +293,22 @@ var webglRender3d = function ($canvas, webgl) {
         }
     }
 
+    if (webgl.normals) {
+        normalsBuffer = webgl.normals.$cacheBuffer;
+        if (!normalsBuffer) {
+            normalsBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, webgl.normals, gl.STATIC_DRAW);
+            webgl.normals.$cacheBuffer = normalsBuffer;
+        }
+    }
+
     // webglUtils.resizeCanvasToDisplaySize(gl.canvas);
     // gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     // gl.enable(gl.CULL_FACE);
 
     if (colorBuffer) {
-        toggleShader(gl, 0);
+        toggleShader(gl, 0, $canvas.webgl.light !== false);
         gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
         var size = 3;                 // 3 components per iteration
         var type = gl.UNSIGNED_BYTE;  // the data is 8bit unsigned values
@@ -367,7 +317,7 @@ var webglRender3d = function ($canvas, webgl) {
         var offset = 0;               // start at the beginning of the buffer
         gl.vertexAttribPointer(gl.colorLocation, size, type, normalize, stride, offset)
     } else if (texcoordBuffer) {
-        toggleShader(gl, 1);
+        toggleShader(gl, 1, $canvas.webgl.light !== false);
         gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
         var size = 2;          // 2 components per iteration
         var type = gl.FLOAT;   // the data is 32bit floats
@@ -385,6 +335,16 @@ var webglRender3d = function ($canvas, webgl) {
         var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
         var offset = 0;        // start at the beginning of the buffer
         gl.vertexAttribPointer(gl.positionLocation, size, type, normalize, stride, offset);
+    }
+
+    if (webgl.normals) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+        var size = 3;          // 3 components per iteration
+        var type = gl.FLOAT;   // the data is 32bit floats
+        var normalize = false; // don't normalize the data
+        var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
+        var offset = 0;        // start at the beginning of the buffer
+        gl.vertexAttribPointer(gl.normalLocation, size, type, normalize, stride, offset);
     }
 
     if ($canvas.webgl.fudgeFactor) {
@@ -434,8 +394,18 @@ var webglRender3d = function ($canvas, webgl) {
         var projectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
     }
 
+
+
+    // 光照变换
+    gl.uniformMatrix4fv(gl.worldViewProjectionLocation, false, matrix);
+    gl.uniformMatrix4fv(gl.worldInverseTransposeLocation, false, m4.transpose(projectionMatrix));
+
     // 耗性能
     gl.uniformMatrix4fv(gl.matrixLocation, false, projectionMatrix);
+
+    var colorLocation = gl.getUniformLocation(gl.program, "a_color");
+    gl.uniform4fv(colorLocation, window.a || [1, 1, 1, 1]); // green
+    gl.uniform3fv(gl.reverseLightDirectionLocation, m4.normalize(window.b || [0, 1, 0]));
 
     // Tell the shader to use texture unit 0 for u_texture
     gl.uniform1i(gl.textureLocation, 0);
@@ -542,11 +512,9 @@ var webglRender2d = function ($canvas,
 const webglRegister = function ($canvas, option) {
     $canvas.$isWebgl = true;
 
-    $canvas.webgl = {
-        depth: option.webgl.depth || 10000,
-        fudgeFactor: option.webgl.fudgeFactor || 0,
-        camera: option.webgl.camera,
-    };
+    $canvas.webgl = {};
+    Object.assign($canvas.webgl, option.webgl);
+    $canvas.webgl.depth = $canvas.webgl.depth || 10000;
 
     var gl = $canvas.$gl = $canvas.$paintContext;
 
@@ -621,6 +589,10 @@ const onPaint = function () {
 
     if ($sprite.webgl) {
         $sprite.$rendered = true;
+
+        if (typeof $sprite.webgl.img === 'string') {
+            $sprite.webgl.img = $canvas.imgLoader($sprite.webgl.img);
+        }
 
         let _webgl = {
             tx: $sprite.getStyle('tx'),

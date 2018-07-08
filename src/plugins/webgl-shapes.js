@@ -237,6 +237,10 @@ const wrapper = function (structure, opt) {
     return structure;
 };
 
+const err = function (msg) {
+    console.error('[Easycanvas-webgl] ' + msg);
+};
+
 const webglShapes = {
     block: function (opt) {
         var structure = createShapeWithCachedArray('block', [opt.a, opt.b, opt.c], opt.colors);
@@ -254,16 +258,51 @@ const webglShapes = {
     },
 
     custom: function (opt) {
-        var res = Object.assign(opt, {
-            vertices: new Float32Array(opt.vertices),
-            indices: new Uint16Array(opt.indices),
-            textures: new Float32Array(opt.textures),
-        });
-
-        if (opt.colors && opt.colors.length) {
-            var colorRepeatTimes = (opt.indices || opt.vertices).length / opt.colors.length * (opt.indices ? 3 : 1);
-            res.colors = new Uint8Array(arrayRepeat(opt.colors, colorRepeatTimes));
+        if (process.env.NODE_ENV !== 'production') {
+            if (!opt.vertices) {
+                err('No vertices provided on custom shape.');
+                return;
+            }
         }
+
+        if (!opt.vertices.$cache) {
+            // 确保复用Float32Array类型的vertices
+            // 一个模型含有多个children时，使用相同的vertices的Buffer，提升效率
+            opt.vertices.$cache = new Float32Array(opt.vertices);
+        }
+
+        if (opt.normals) {
+            if (!opt.normals.$cache) {
+                opt.normals.$cache = new Float32Array(opt.normals);
+            }
+        }
+
+        if (opt.indices) {
+            if (!opt.indices.$cache) {
+                opt.indices.$cache = new Uint16Array(opt.indices);
+            }
+        }
+
+        if (opt.textures) {
+            if (!opt.textures.$cache) {
+                opt.textures.$cache = new Float32Array(opt.textures);
+            }
+        }
+
+        if (opt.colors) {
+            if (!opt.colors.$cache) {
+                var colorRepeatTimes = opt.vertices.length / opt.colors.length;
+                opt.colors.$cache = new Uint8Array(arrayRepeat(opt.colors, colorRepeatTimes));
+            }
+        }
+
+        var res = Object.assign(opt, {
+            vertices: opt.vertices.$cache,
+            normals: opt.normals ? opt.normals.$cache : undefined,
+            indices: opt.indices ? opt.indices.$cache : undefined,
+            textures: opt.textures ? opt.textures.$cache : undefined,
+            colors: opt.colors ? opt.colors.$cache : undefined,
+        });
 
         return res;
     },
